@@ -1,0 +1,50 @@
+version: "1"
+
+package:
+  id: com.calibre-ebook.calibre
+  name: calibre
+  version: 8.7.0.0
+  kind: app
+  description: |
+    calibre is a powerful and easy to use e-book manager.
+
+command: [/opt/apps/com.calibre-ebook.calibre/files/bin/calibre]
+
+base: org.deepin.base/25.2.0
+
+
+sources:
+  - kind: file
+    url: https://git.cicd.getdeepin.org/releases/https://download.calibre-ebook.com/8.7.0/calibre-8.7.0-x86_64.txz
+    digest: 4e5e9026640401b6dc377dd176dea54c39ae64e4faaabdd9ecda6184a60bf023
+    name: calibre.txz
+
+build: |
+  set -x
+  echo 'building...'
+
+  #bash linux-installer.sh install_dir=$PREFIX bin_dir=$PREFIX/bin share_dir=$PREFIX/share version=8.7.0
+
+  mkdir -p $PREFIX/lib/calibre
+
+  tar xf /project/linglong/sources/calibre.txz -C $PREFIX/lib/calibre
+
+  mkdir -p $PREFIX/bin/ $PREFIX/share/{applications,desktop-directories,icons/hicolor,mime/packages}
+
+  XDG_DATA_DIRS=$PREFIX/share $PREFIX/lib/calibre/calibre_postinstall --root=$PREFIX
+
+  mv $PREFIX/share/applications/calibre-lrfviewer.desktop $PREFIX/share/applications/com.calibre-ebook.calibre.lrfviewer.desktop
+  mv $PREFIX/share/applications/calibre-ebook-viewer.desktop $PREFIX/share/applications/com.calibre-ebook.calibre.ebook-viewer.desktop
+  mv $PREFIX/share/applications/calibre-ebook-edit.desktop $PREFIX/share/applications/com.calibre-ebook.calibre.ebook-edit.desktop
+  mv $PREFIX/share/applications/calibre-gui.desktop $PREFIX/share/applications/com.calibre-ebook.calibre.gui.desktop
+
+  mkdir -p $PREFIX/etc/
+  echo "$PREFIX/lib/calibre/lib" > $PREFIX/etc/ld.so.conf
+
+  cp /usr/bin/cwebp $PREFIX/lib/calibre/bin/cwebp
+
+  echo 'done'
+
+buildext:
+  apt:
+    build_depends: [xdg-utils, webp]
